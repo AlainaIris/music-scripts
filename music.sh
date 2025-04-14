@@ -4,18 +4,57 @@
 #
 # Note: playlists are used .m3u format, if you have a different format
 #       then you must modify the scirpt to suit your purposes.
-# To Do: Add shuffle
+
+# Remove any vestigial files prior
+rm playlist.m3u
+rm shuffle.m3u
 
 trap "rm playlist.m3u" EXIT
+
 path="$1"
-if [[ "$path" == "" ]] then
+
+while [[ $# -gt 0 ]]; do
+        case $1 in
+                -e|--extension)
+                        shift # past argument
+                        shift # past value
+                        ;;
+                -s|--shuffle)
+                        SHUFFLE="true"
+                        shift # past argument
+                        ;;
+                -*|--*)
+                        echo "Unknown option $1"
+                        shift
+#exit 1
+                        ;;
+                *)
+                        POSITIONAL_ARGS+=("$1") # save positional arg
+                        shift # past argument
+                        ;;
+        esac
+done
+
+echo "$path"
+if [[ "$path" == "" || ! -e "$path" ]] then
         path='.'
 fi
+
 file=$(ls "$path" | grep ".m3u")
+
 num=$(echo "$file" | grep ".m3u" | wc -l)
+
 if [[ "$num" == '1' ]] then
         echo ./$1$file > playlist.m3u
 else
         find "$path" -name "*.mp3" > playlist.m3u
 fi
-mpv --input-ipc-server=/tmp/mpvsocket playlist.m3u
+
+filename="playlist.m3u"
+
+if [[ "$SHUFFLE" == "true" ]] then
+        cat playlist.m3u | shuf > shuffle.m3u
+        filename="shuffle.m3u"
+fi
+echo "$filename"
+mpv --input-ipc-server=/tmp/mpvsocket "$filename"
