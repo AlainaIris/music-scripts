@@ -45,7 +45,7 @@ file=$(ls "$path" | grep ".m3u")
 num=$(echo "$file" | grep ".m3u" | wc -l)
 
 if [[ "$num" == '1' ]] then
-        echo $path/$file > playlist.m3u
+        cat "$path/$file" | awk "{ printf \"$path\/\"; print }" > playlist.m3u
 else
         find "$path" -name "*.mp3" > playlist.m3u
 fi
